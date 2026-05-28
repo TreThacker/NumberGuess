@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Guessing Game</title>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+:root{
+  --bg-gradient:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+  --card-bg:rgba(15,23,42,0.95);
+  --panel-bg:#1e293b;
+  --panel-border:#334155;
+  --input-bg:#0f172a;
+  --text-main:#f8fafc;
+  --text-muted:#94a3b8;
+  --primary:#4f46e5;
+  --primary-hover:#4338ca;
+  --secondary:#0ea5e9;
+  --success:#10b981;
+  --danger:#ef4444;
+  --warning-bg:#332a15;
+  --warning-border:#45371c;
+  --warning-text:#fbbf24;
+  --border-radius-lg:18px;
+  --border-radius-md:12px;
+  --shadow-lg:0 20px 25px -5px rgba(0,0,0,0.25);
+}
+
+[data-theme="light"]{
+  --bg-gradient:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);
+  --card-bg:rgba(255,255,255,0.95);
+  --panel-bg:#f8fafc;
+  --panel-border:#e2e8f0;
+  --input-bg:#ffffff;
+  --text-main:#1e293b;
+  --text-muted:#64748b;
+  --warning-bg:#fef3c7;
+  --warning-border:#fde68a;
+  --warning-text:#b45309;
+}
+
+body{
+  font-family:Arial,sans-serif;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:30px;
+  background:var(--bg-gradient);
+  color:var(--text-main);
+}
+
+.app-layout{
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  gap:28px;
+  width:100%;
+}
+
+.game-container,
+.menu-window{
+  background:var(--card-bg);
+  border-radius:var(--border-radius-lg);
+  border:1px solid rgba(56,189,248,0.25);
+  box-shadow:
+    0 0 25px rgba(14,165,233,0.55),
+    0 0 60px rgba(79,70,229,0.35),
+    0 0 120px rgba(14,165,233,0.15),
+    var(--shadow-lg);
+}
+
+.payout-window{
+  width:240px;
+  padding:22px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+
+  background:var(--card-bg);
+  border-radius:var(--border-radius-lg);
+  border:1px solid rgba(56,189,248,0.25);
+
+  box-shadow:
+    0 0 25px rgba(14,165,233,0.55),
+    0 0 60px rgba(79,70,229,0.35),
+    0 0 120px rgba(14,165,233,0.15),
+    var(--shadow-lg);
+}
+
+.payout-row{
+  display:flex;
+  justify-content:space-between;
+  padding:8px 10px;
+  background:var(--input-bg);
+  border:1px solid var(--panel-border);
+  border-radius:8px;
+  font-size:14px;
+}
+
+.records-window{
+  width:240px;
+  margin-top:20px;
+  padding:22px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+
+  background:var(--card-bg);
+
+  border-radius:var(--border-radius-lg);
+
+  border:1px solid rgba(56,189,248,0.25);
+
+  box-shadow:
+    0 0 25px rgba(14,165,233,0.55),
+    0 0 60px rgba(79,70,229,0.35),
+    0 0 120px rgba(14,165,233,0.15),
+    var(--shadow-lg);
+}
+
+.game-container{
+  width:100%;
+  max-width:540px;
+  padding:30px;
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+}
+
+.menu-window{
+  width:240px;
+  padding:22px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.header-row,
+.score-row,
+.stats-mode-details,
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+h1{
+  font-size:30px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--text-main);
+}
+
+h1 .title-text{
+  background:linear-gradient(to right,#60a5fa,#38bdf8);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.custom-range-area,
+.dashboard-panel{
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);
+  border-radius:var(--border-radius-md);
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.preset-row,
+.range-inputs,
+.stats-grid,
+.store-grid{
+  display:grid;
+  gap:10px;
+}
+
+.preset-row,
+.range-inputs{
+  grid-template-columns:repeat(3,1fr);
+}
+
+.stats-grid,
+.store-grid{
+  grid-template-columns:repeat(2,1fr);
+}
+
+.input-group{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  font-size:12px;
+  color:var(--text-muted);
+  text-transform:uppercase;
+  font-weight:bold;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  background:var(--input-bg);
+  color:var(--text-main);
+  border:1px solid var(--panel-border);
+  border-radius:8px;
+  text-align:center;
+  font-size:15px;
+}
+
+button{
+  border:none;
+  border-radius:10px;
+  padding:10px 14px;
+  cursor:pointer;
+  font-weight:bold;
+  transition:0.2s ease;
+}
+
+button:hover{
+  transform:translateY(-1px);
+}
+
+button:disabled{
+  opacity:0.45;
+  cursor:not-allowed;
+  transform:none;
+}
+
+.preset-btn,
+#themeToggleBtn,
+#hintBtn{
+  background:var(--panel-border);
+  color:var(--text-main);
+}
+
+#newGameBtn,
+#openRecordsBtn,
+#openStatsBtn,
+#openStoreBtn,
+#openAchievementsBtn{
+  background:var(--primary);
+  color:white;
+}
+
+#newGameBtn:hover,
+#openRecordsBtn:hover,
+#openStatsBtn:hover,
+#openStoreBtn:hover,
+#openAchievementsBtn:hover{
+  background:var(--primary-hover);
+}
+
+#restartBtn{
+  background:var(--success);
+  color:white;
+  width:100%;
+}
+
+#closeRecordsBtn,
+#closeStatsBtn,
+#closeStoreBtn,
+#closeAchievementsBtn,
+#resetStatsBtn{
+  background:var(--secondary);
+  color:white;
+}
+
+#closeRecordsBtn:hover,
+#closeStatsBtn:hover,
+#closeStoreBtn:hover,
+#closeAchievementsBtn:hover,
+#resetStatsBtn:hover{
+  background:var(--primary);
+}
+
+.header-buttons{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+#openSetupBtn,
+#themeToggleBtn{
+  background:var(--panel-border);
+  color:var(--text-main);
+  font-size:18px;
+  min-width:42px;
+}
+
+.gameplay-area{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  align-items:center;
+}
+
+.input-action-row{
+  width:100%;
+  display:flex;
+  gap:10px;
+}
+
+#guessInput{
+  flex:1;
+  font-size:18px;
+  font-weight:bold;
+}
+
+#attemptsLeft{
+  background:var(--panel-bg);
+  padding:6px 12px;
+  border-radius:20px;
+  color:var(--text-muted);
+  font-size:14px;
+  font-weight:bold;
+}
+
+#feedback,
+#storeMessage{
+  text-align:center;
+  font-weight:bold;
+}
+
+#hintBox{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  background:var(--warning-bg);
+  border:1px solid var(--warning-border);
+  color:var(--warning-text);
+  font-weight:bold;
+  text-align:center;
+}
+
+.board-title{
+  font-size:13px;
+  text-transform:uppercase;
+  color:var(--text-muted);
+  font-weight:bold;
+  text-align:center;
+  width:100%;
+}
+
+.stats-mode-box,
+.achievement{
+  background:var(--input-bg);
+  border:1px solid var(--panel-border);
+  border-radius:10px;
+  padding:12px;
+}
+
+.stats-mode-title{
+  font-weight:bold;
+}
+
+.stats-mode-details{
+  margin-top:5px;
+  font-size:12px;
+  color:var(--text-muted);
+}
+
+#guessHistoryList{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.guess-history-item{
+  background:var(--input-bg);
+  border:1px solid var(--panel-border);
+  border-radius:8px;
+  padding:8px 10px;
+  font-size:14px;
+  font-weight:bold;
+}
+
+.guess-history-item.high{
+  color:var(--danger);
+}
+
+.guess-history-item.low{
+  color:var(--secondary);
+}
+
+.guess-history-item.correct{
+  color:var(--success);
+}
+
+.store-item{
+  background:var(--input-bg);
+  color:var(--text-main);
+  border:1px solid var(--panel-border);
+  font-size:24px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  padding:14px;
+}
+
+.store-item span{
+  font-size:12px;
+  color:var(--text-muted);
+}
+
+.store-item.owned{
+  border-color:var(--success);
+}
+
+.store-item.active{
+  background:var(--success);
+  color:white;
+}
+
+.store-item.active span{
+  color:white;
+}
+
+.achievement{
+  font-size:13px;
+  font-weight:bold;
+}
+
+.achievement.unlocked{
+  border-color:var(--success);
+  color:var(--success);
+}
+
+.achievement.locked{
+  opacity:0.5;
+}
+
+.achievement-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.hidden{
+  display:none !important;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+  padding:20px;
+}
+
+.side-panel-column{
+  display:flex;
+  flex-direction:column;
+}
+
+.modal-content{
+  width:100%;
+  max-width:420px;
+  background:var(--card-bg);
+  border-radius:var(--border-radius-lg);
+  padding:24px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  box-shadow:
+    0 0 25px rgba(14,165,233,0.55),
+    0 0 60px rgba(79,70,229,0.35),
+    var(--shadow-lg);
+}
+
+#storeModal .modal-content,
+#achievementsModal .modal-content {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+/* Custom scrollbar */
+#storeModal .modal-content::-webkit-scrollbar,
+#achievementsModal .modal-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+#storeModal .modal-content::-webkit-scrollbar-track,
+#achievementsModal .modal-content::-webkit-scrollbar-track {
+  background: var(--panel-bg);
+  border-radius: 10px;
+}
+
+#storeModal .modal-content::-webkit-scrollbar-thumb,
+#achievementsModal .modal-content::-webkit-scrollbar-thumb {
+  background: var(--secondary);
+  border-radius: 10px;
+}
+
+#storeModal .modal-content::-webkit-scrollbar-thumb:hover,
+#achievementsModal .modal-content::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+@media(max-width:900px){
+  .app-layout{
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .menu-window,
+  .records-window,
+  .payout-window{
+    width:100%;
+    max-width:540px;
+  }
+}
+
+@media(max-width:600px){
+  .preset-row,
+  .range-inputs,
+  .stats-grid,
+  .store-grid{
+    grid-template-columns:1fr;
+  }
+
+  .input-action-row{
+    flex-direction:column;
+  }
+
+  .header-row{
+    flex-direction:column;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app-layout">
+
+<div class="payout-window">
+  <div class="board-title">💰 Payouts</div>
+  <div id="payoutTable"></div>
+</div>
+
+  <div class="game-container">
+
+    <div class="header-row">
+  <h1>
+    <span id="headerActiveIcon">🎯</span>
+    <span class="title-text">Guessing Game</span>
+  </h1>
+
+  <div class="header-buttons">
+    <button id="openSetupBtn">⚙️</button>
+    <button id="themeToggleBtn">☀️</button>
+  </div>
+</div>
+    <div id="setupModal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>⚙️ Game Setup</h2>
+      <button id="closeSetupBtn">✕</button>
+    </div>
+
+    <div class="custom-range-area">
+
+      <div class="preset-row">
+        <button class="preset-btn" data-min="1" data-max="50" data-attempts="10">Easy</button>
+        <button class="preset-btn" data-min="1" data-max="100" data-attempts="7">Medium</button>
+        <button class="preset-btn" data-min="1" data-max="500" data-attempts="5">Hard</button>
+      </div>
+
+      <div class="range-inputs">
+
+        <div class="input-group">
+			<label>Min</label>
+			<input
+				type="number"
+				id="minRangeInput"
+				value="1"
+				min="1"
+				max="1"
+				readonly
+			>
+</div>
+
+        <div class="input-group">
+          <label>Max</label>
+          <input
+			type="number"
+			id="maxRangeInput"
+			value="100"
+			min="50"
+			>
+        </div>
+
+        <div class="input-group">
+          <label>Attempts</label>
+          <input
+			type="number"
+			id="attemptsInput"
+			value="7"
+			min="1"
+			max="15"
+			>
+        </div>
+
+      </div>
+
+      <button id="newGameBtn">Apply & Start Game</button>
+      </div>
+	 </div>
+    </div>
+
+    <div class="gameplay-area">
+
+      <p id="gameInstructions"></p>
+
+      <p id="attemptsLeft"></p>
+
+      <div class="input-action-row">
+        <input type="number" id="guessInput" placeholder="Enter Guess">
+        <button id="submitBtn">Submit</button>
+        <button id="hintBtn">💡 Hint</button>
+      </div>
+
+      <p id="hintBox" class="hidden"></p>
+
+      <p id="feedback"></p>
+
+      <div class="dashboard-panel">
+        <div class="board-title">📜 Guess History</div>
+        <div id="guessHistoryList"></div>
+      </div>
+
+      <button id="restartBtn" class="hidden">Play Again</button>
+
+    </div>
+
+  </div>
+  <div class="side-panel-column">
+  <div class="menu-window">
+
+    <div class="board-title">📂 Menus</div>
+
+    <button id="openStatsBtn">📊 Open Career Stats</button>
+
+    <button id="openStoreBtn">🛒 Open Store</button>
+
+    <button id="openAchievementsBtn">🏅 Open Achievements</button>
+
+  </div>
+  
+<div class="records-window">
+
+  <div class="board-title">🏆 Records</div>
+
+  <div class="score-row">
+    <span>Category:</span>
+    <b id="currentDiffLabel">medium</b>
+  </div>
+
+  <div class="score-row">
+    <span>Best Score:</span>
+    <b id="highScoreDisplay">None Yet</b>
+  </div>
+
+  <div class="score-row">
+    <span>Coin Bank:</span>
+    <b id="coinBankDisplay">0 coins</b>
+  </div>
+  </div>
+</div>
+
+<!-- STATS MODAL -->
+<div id="statsModal" class="modal hidden">
+
+  <div class="modal-content">
+
+    <div class="modal-header">
+      <h2>📊 Career Statistics</h2>
+      <button id="closeStatsBtn">✕</button>
+    </div>
+
+    <div class="stats-grid">
+
+      <div class="stats-mode-box">
+        <div class="stats-mode-title">Easy</div>
+        <div class="stats-mode-details">
+          <span>W/L: <span id="easyWin">0</span>/<span id="easyLoss">0</span></span>
+          <b id="easyRate">0%</b>
+        </div>
+      </div>
+
+      <div class="stats-mode-box">
+        <div class="stats-mode-title">Medium</div>
+        <div class="stats-mode-details">
+          <span>W/L: <span id="mediumWin">0</span>/<span id="mediumLoss">0</span></span>
+          <b id="mediumRate">0%</b>
+        </div>
+      </div>
+
+      <div class="stats-mode-box">
+        <div class="stats-mode-title">Hard</div>
+        <div class="stats-mode-details">
+          <span>W/L: <span id="hardWin">0</span>/<span id="hardLoss">0</span></span>
+          <b id="hardRate">0%</b>
+        </div>
+      </div>
+
+      <div class="stats-mode-box">
+        <div class="stats-mode-title">Custom</div>
+        <div class="stats-mode-details">
+          <span>W/L: <span id="customWin">0</span>/<span id="customLoss">0</span></span>
+          <b id="customRate">0%</b>
+        </div>
+      </div>
+
+    </div>
+
+    <button id="resetStatsBtn">Clear All Statistics</button>
+
+  </div>
+
+</div>
+
+<!-- STORE MODAL -->
+<div id="storeModal" class="modal hidden">
+
+  <div class="modal-content">
+
+    <div class="modal-header">
+      <h2>🛒 Icon Store</h2>
+      <button id="closeStoreBtn">✕</button>
+    </div>
+
+    <div class="score-row">
+      <span>Active Icon:</span>
+      <b id="activeIconDisplay">🎯</b>
+    </div>
+
+<div class="store-grid">
+  <button class="store-item" data-icon="🔥" data-price="100">🔥<span>100 coins</span></button>
+  <button class="store-item" data-icon="🚀" data-price="250">🚀<span>250 coins</span></button>
+  <button class="store-item" data-icon="👑" data-price="500">👑<span>500 coins</span></button>
+  <button class="store-item" data-icon="💎" data-price="1000">💎<span>1000 coins</span></button>
+
+  <button class="store-item" data-icon="🐸" data-price="75">🐸<span>75 coins</span></button>
+  <button class="store-item" data-icon="🦄" data-price="150">🦄<span>150 coins</span></button>
+  <button class="store-item" data-icon="🍕" data-price="175">🍕<span>175 coins</span></button>
+  <button class="store-item" data-icon="🧠" data-price="200">🧠<span>200 coins</span></button>
+  <button class="store-item" data-icon="🦖" data-price="300">🦖<span>300 coins</span></button>
+  <button class="store-item" data-icon="🥔" data-price="325">🥔<span>325 coins</span></button>
+  <button class="store-item" data-icon="🧀" data-price="350">🧀<span>350 coins</span></button>
+  <button class="store-item" data-icon="🐔" data-price="375">🐔<span>375 coins</span></button>
+  <button class="store-item" data-icon="🛸" data-price="425">🛸<span>425 coins</span></button>
+  <button class="store-item" data-icon="🧙" data-price="475">🧙<span>475 coins</span></button>
+  <button class="store-item" data-icon="🌈" data-price="550">🥷<span>550 coins</span></button>
+  <button class="store-item" data-icon="🦕" data-price="600">🦕<span>600 coins</span></button>
+  <button class="store-item" data-icon="🤖" data-price="650">🤖<span>650 coins</span></button>
+  <button class="store-item" data-icon="👽" data-price="700">👽<span>700 coins</span></button>
+  <button class="store-item" data-icon="🐢" data-price="750">🐢<span>750 coins</span></button>
+  <button class="store-item" data-icon="🦥" data-price="800">🦥<span>800 coins</span></button>
+  <button class="store-item" data-icon="🍩" data-price="850">🍩<span>850 coins</span></button>
+  <button class="store-item" data-icon="🌮" data-price="900">🌮<span>900 coins</span></button>
+  <button class="store-item" data-icon="🥨" data-price="950">🥨<span>950 coins</span></button>
+  <button class="store-item" data-icon="💀" data-price="1100">🪩<span>1100 coins</span></button>
+  <button class="store-item" data-icon="🎵" data-price="1250">🎩<span>1250 coins</span></button>
+  <button class="store-item" data-icon="🧻" data-price="1400">🧻<span>1400 coins</span></button>
+  <button class="store-item" data-icon="🍔" data-price="1550">🪿<span>1550 coins</span></button>
+  <button class="store-item" data-icon="🤠" data-price="1700">🧌<span>1700 coins</span></button>
+  <button class="store-item" data-icon="👻" data-price="1850">🥸<span>1850 coins</span></button>
+  <button class="store-item" data-icon="🦑" data-price="2000">🦑<span>2000 coins</span></button>
+  <button class="store-item" data-icon="🐉" data-price="2500">🐉<span>2500 coins</span></button>
+</div>
+
+    <p id="storeMessage"></p>
+
+  </div>
+
+</div>
+
+<!-- ACHIEVEMENTS MODAL -->
+<div id="achievementsModal" class="modal hidden">
+
+  <div class="modal-content">
+
+    <div class="modal-header">
+      <h2>🏅 Achievements</h2>
+      <button id="closeAchievementsBtn">✕</button>
+    </div>
+
+<div class="achievement-list">
+  <div class="achievement locked" id="achievement100">🔒 Coin Collector — 100 coins</div>
+  <div class="achievement locked" id="achievement500">🔒 Coin Champion — 500 coins</div>
+  <div class="achievement locked" id="achievement1000">🔒 Coin Master — 1,000 coins</div>
+  <div class="achievement locked" id="achievement2500">🔒 Coin Legend — 2,500 coins</div>
+
+  <div class="achievement locked" id="achievement50">🔒 Pocket Change — 50 coins</div>
+  <div class="achievement locked" id="achievement250">🔒 First Shopper — 250 coins</div>
+  <div class="achievement locked" id="achievement750">🔒 Big Wallet Energy — 750 coins</div>
+  <div class="achievement locked" id="achievement1500">🔒 Coin Goblin — 1,500 coins</div>
+  <div class="achievement locked" id="achievement3000">🔒 Rich Guess Goblin — 3,000 coins</div>
+  <div class="achievement locked" id="achievement5000">🔒 Bank Boss — 5,000 coins</div>
+  <div class="achievement locked" id="achievement7500">🔒 Silly Millionaire-ish — 7,500 coins</div>
+  <div class="achievement locked" id="achievement10000">🔒 Legendary Wallet — 10,000 coins</div>
+  <div class="achievement locked" id="achievement15000">🔒 Coin Dragon — 15,000 coins</div>
+  <div class="achievement locked" id="achievement20000">🔒 Number Guess Tycoon — 20,000 coins</div>
+  <div class="achievement locked" id="achievement30000">🔒 Galactic Piggy Bank — 30,000 coins</div>
+  <div class="achievement locked" id="achievement40000">🔒 Potato Banker — 40,000 coins</div>
+  <div class="achievement locked" id="achievement50000">🔒 Supreme Coin Wizard — 50,000 coins</div>
+  <div class="achievement locked" id="achievement75000">🔒 Ultra Mega Guess Lord — 75,000 coins</div>
+  <div class="achievement locked" id="achievement100000">🔒 Infinite Coin Brain — 100,000 coins</div>
+  <div class="achievement locked" id="achievement150000">🔒 Cosmic Treasure Gremlin — 150,000 coins</div>
+  <div class="achievement locked" id="achievement200000">🔒 The Bank Has Questions — 200,000 coins</div>
+  <div class="achievement locked" id="achievement300000">🔒 Emoji Economy Emperor — 300,000 coins</div>
+  <div class="achievement locked" id="achievement500000">🔒 Half-Million Guess Machine — 500,000 coins</div>
+</div>
+
+  </div>
+
+</div>
+
+<script>
+const difficultyRules = [
+  {name:"easy",min:1,max:50,attempts:10},
+  {name:"medium",min:1,max:100,attempts:7},
+  {name:"hard",min:1,max:500,attempts:5}
+];
+
+let randomNumber;
+let attemptsRemaining;
+let totalAllowedAttempts;
+let currentDifficultyCategory = "medium";
+let currentMinBoundary;
+let currentMaxBoundary;
+
+let coinBank = parseInt(localStorage.getItem("coin_bank")) || 0;
+let ownedIcons = JSON.parse(localStorage.getItem("owned_icons")) || ["🎯"];
+let activeIcon = localStorage.getItem("active_icon") || "🎯";
+
+const feedback = document.querySelector("#feedback");
+const attemptsLeftDisplay = document.querySelector("#attemptsLeft");
+const gameInstructions = document.querySelector("#gameInstructions");
+const inputField = document.querySelector("#guessInput");
+const submitBtn = document.querySelector("#submitBtn");
+const restartBtn = document.querySelector("#restartBtn");
+const hintBtn = document.querySelector("#hintBtn");
+const hintBox = document.querySelector("#hintBox");
+const minRangeInput = document.querySelector("#minRangeInput");
+const maxRangeInput = document.querySelector("#maxRangeInput");
+const attemptsInput = document.querySelector("#attemptsInput");
+const currentDiffLabel = document.querySelector("#currentDiffLabel");
+const highScoreDisplay = document.querySelector("#highScoreDisplay");
+const coinBankDisplay = document.querySelector("#coinBankDisplay");
+const activeIconDisplay = document.querySelector("#activeIconDisplay");
+const headerActiveIcon = document.querySelector("#headerActiveIcon");
+const guessHistoryList = document.querySelector("#guessHistoryList");
+const themeToggleBtn = document.querySelector("#themeToggleBtn");
+const openSetupBtn = document.querySelector("#openSetupBtn");
+const closeSetupBtn = document.querySelector("#closeSetupBtn");
+const setupModal = document.querySelector("#setupModal");
+
+const statsModal = document.querySelector("#statsModal");
+const storeModal = document.querySelector("#storeModal");
+const achievementsModal = document.querySelector("#achievementsModal");
+
+const payoutTable = document.querySelector("#payoutTable");
+
+function closeAllModals(){
+  setupModal.classList.add("hidden");
+  statsModal.classList.add("hidden");
+  storeModal.classList.add("hidden");
+  achievementsModal.classList.add("hidden");
+}
+
+function initTheme(){
+  const savedTheme = localStorage.getItem("theme") || "dark";
+
+  document.documentElement.setAttribute("data-theme",savedTheme);
+
+  themeToggleBtn.textContent =
+    savedTheme === "dark"
+      ? "☀️"
+      : "🌙";
+}
+
+function toggleTheme(){
+
+  const currentTheme =
+    document.documentElement.getAttribute("data-theme");
+
+  const nextTheme =
+    currentTheme === "dark" ? "light" : "dark";
+
+  document.documentElement.setAttribute("data-theme",nextTheme);
+
+  localStorage.setItem("theme",nextTheme);
+
+  themeToggleBtn.textContent =
+    nextTheme === "dark"
+      ? "☀️"
+      : "🌙";
+}
+
+function initGame(){
+
+  currentMinBoundary =
+    parseInt(minRangeInput.value) || 1;
+
+  currentMaxBoundary =
+    parseInt(maxRangeInput.value) || 100;
+
+  totalAllowedAttempts =
+    parseInt(attemptsInput.value) || 7;
+
+/* LOCK MINIMUM RANGE TO 1 */
+currentMinBoundary = 1;
+minRangeInput.value = 1;
+
+/* ENFORCE MAX RANGE MINIMUM OF 50 */
+if(currentMaxBoundary < 50){
+
+  currentMaxBoundary = 50;
+
+  maxRangeInput.value = 50;
+}
+
+/* PREVENT INVALID RANGE */
+if(currentMinBoundary >= currentMaxBoundary){
+
+  currentMaxBoundary =
+    currentMinBoundary + 49;
+
+  maxRangeInput.value =
+    currentMaxBoundary;
+}
+
+/* CAP ATTEMPTS BETWEEN 1 AND 15 */
+if(totalAllowedAttempts < 1){
+
+  totalAllowedAttempts = 1;
+
+  attemptsInput.value = 1;
+}
+
+if(totalAllowedAttempts > 15){
+
+  totalAllowedAttempts = 15;
+
+  attemptsInput.value = 15;
+}
+
+  attemptsRemaining = totalAllowedAttempts;
+
+  randomNumber =
+    Math.floor(
+      Math.random() *
+      (currentMaxBoundary - currentMinBoundary + 1)
+    ) + currentMinBoundary;
+
+  gameInstructions.textContent =
+    `I'm thinking of a number between ${currentMinBoundary} and ${currentMaxBoundary}.`;
+
+  attemptsLeftDisplay.textContent =
+    `Attempts Remaining: ${attemptsRemaining}`;
+
+  feedback.textContent = "";
+
+  hintBox.classList.add("hidden");
+
+  guessHistoryList.innerHTML = "";
+
+  inputField.disabled = false;
+  submitBtn.disabled = false;
+
+  restartBtn.classList.add("hidden");
+
+  determineDifficulty();
+
+  updateCoinBankDisplay();
+  updateStoreDisplay();
+  updateStatsDisplay();
+  checkAchievements();
+  updatePayoutTable();
+
+  inputField.value = "";
+  inputField.focus();
+  setupModal.classList.add("hidden");
+}
+
+function determineDifficulty(){
+
+  const match =
+    difficultyRules.find(rule =>
+      rule.min === currentMinBoundary &&
+      rule.max === currentMaxBoundary &&
+      rule.attempts === totalAllowedAttempts
+    );
+
+  currentDifficultyCategory =
+    match ? match.name : "custom";
+
+  currentDiffLabel.textContent =
+    currentDifficultyCategory;
+
+  const best =
+    localStorage.getItem(
+      `highscore_${currentDifficultyCategory}`
+    );
+
+  highScoreDisplay.textContent =
+    best ? `${best} attempts` : "None Yet";
+}
+
+function calculateCoinReward(
+  guessesUsed,
+  totalAttempts
+){
+
+  const maxReward = 500;
+  const minReward = 20;
+
+  if(guessesUsed <= 1) return maxReward;
+
+  if(guessesUsed >= totalAttempts)
+    return minReward;
+
+  const ratio =
+    (totalAttempts - guessesUsed) /
+    (totalAttempts - 1);
+
+  return Math.round(
+    minReward +
+    (maxReward - minReward) * ratio
+  );
+}
+
+function updatePayoutTable(){
+  const attempts = parseInt(attemptsInput.value) || 1;
+
+  payoutTable.innerHTML = "";
+
+  for(let guessNumber = 1; guessNumber <= attempts; guessNumber++){
+
+    const coins =
+      calculateCoinReward(
+        guessNumber,
+        attempts
+      );
+
+    const row =
+      document.createElement("div");
+
+    row.classList.add("payout-row");
+
+    row.innerHTML =
+      `<span>Guess ${guessNumber}</span><b>${coins}</b>`;
+
+    payoutTable.appendChild(row);
+  }
+}
+
+function updateCoinBankDisplay(){
+  coinBankDisplay.textContent =
+    `${coinBank} coins`;
+}
+
+function updateStoreDisplay(){
+
+  activeIconDisplay.textContent =
+    activeIcon;
+
+  headerActiveIcon.textContent =
+    activeIcon;
+
+  document
+    .querySelectorAll(".store-item")
+    .forEach(item => {
+
+      const icon = item.dataset.icon;
+      const price = Number(item.dataset.price);
+
+      item.classList.remove(
+        "owned",
+        "active"
+      );
+
+      if(ownedIcons.includes(icon)){
+
+        item.classList.add("owned");
+
+        item.innerHTML =
+          `${icon}<span>Owned</span>`;
+
+      }else{
+
+        item.innerHTML =
+          `${icon}<span>${price} coins</span>`;
+      }
+
+      if(icon === activeIcon){
+
+        item.classList.add("active");
+
+        item.innerHTML =
+          `${icon}<span>Active</span>`;
+      }
+    });
+}
+
+function checkAchievements(){
+
+  const achievements = [
+    {id:"achievement50", coins:50},
+    {id:"achievement100", coins:100},
+    {id:"achievement250", coins:250},
+    {id:"achievement500", coins:500},
+    {id:"achievement750", coins:750},
+    {id:"achievement1000", coins:1000},
+    {id:"achievement1500", coins:1500},
+    {id:"achievement2500", coins:2500},
+    {id:"achievement3000", coins:3000},
+    {id:"achievement5000", coins:5000},
+    {id:"achievement7500", coins:7500},
+    {id:"achievement10000", coins:10000},
+    {id:"achievement15000", coins:15000},
+    {id:"achievement20000", coins:20000},
+    {id:"achievement30000", coins:30000},
+    {id:"achievement40000", coins:40000},
+    {id:"achievement50000", coins:50000},
+    {id:"achievement75000", coins:75000},
+    {id:"achievement100000", coins:100000},
+    {id:"achievement150000", coins:150000},
+    {id:"achievement200000", coins:200000},
+    {id:"achievement300000", coins:300000},
+    {id:"achievement500000", coins:500000}
+  ];
+
+  achievements.forEach(a => {
+    const element = document.querySelector(`#${a.id}`);
+
+    if (!element) return;
+
+    if (
+      coinBank >= a.coins ||
+      localStorage.getItem(a.id) === "unlocked"
+    ) {
+      element.classList.remove("locked");
+      element.classList.add("unlocked");
+      localStorage.setItem(a.id, "unlocked");
+    }
+  });
+}
+
+function updateStatsDisplay(){
+
+  const modes = [
+    "easy",
+    "medium",
+    "hard",
+    "custom"
+  ];
+
+  modes.forEach(mode => {
+
+    const wins =
+      parseInt(
+        localStorage.getItem(
+          `stats_${mode}_won`
+        )
+      ) || 0;
+
+    const losses =
+      parseInt(
+        localStorage.getItem(
+          `stats_${mode}_lost`
+        )
+      ) || 0;
+
+    const total = wins + losses;
+
+    const rate =
+      total > 0
+        ? Math.round((wins / total) * 100)
+        : 0;
+
+    document.querySelector(
+      `#${mode}Win`
+    ).textContent = wins;
+
+    document.querySelector(
+      `#${mode}Loss`
+    ).textContent = losses;
+
+    document.querySelector(
+      `#${mode}Rate`
+    ).textContent = `${rate}%`;
+  });
+}
+
+function recordGameEnd(isWin){
+
+  const key =
+    isWin
+      ? `stats_${currentDifficultyCategory}_won`
+      : `stats_${currentDifficultyCategory}_lost`;
+
+  const value =
+    parseInt(localStorage.getItem(key)) || 0;
+
+  localStorage.setItem(
+    key,
+    value + 1
+  );
+
+  updateStatsDisplay();
+}
+
+function addGuessToHistory(
+  guess,
+  direction
+){
+
+  const item =
+    document.createElement("div");
+
+  item.classList.add("guess-history-item");
+
+  if(direction === "high"){
+
+    item.classList.add("high");
+
+    item.textContent =
+      `${guess} ↓`;
+
+  }else if(direction === "low"){
+
+    item.classList.add("low");
+
+    item.textContent =
+      `${guess} ↑`;
+
+  }else{
+
+    item.classList.add("correct");
+
+    item.textContent =
+      `${guess} 🎯`;
+  }
+
+  guessHistoryList.appendChild(item);
+}
+
+function endGame(){
+
+  inputField.disabled = true;
+
+  submitBtn.disabled = true;
+
+  restartBtn.classList.remove("hidden");
+}
+
+submitBtn.addEventListener(
+  "click",
+  function(){
+
+const guess =
+  Number(inputField.value);
+
+/* HIDDEN CHEAT SYSTEM */
+const hiddenCodes = [
+  {
+    key: atob("Nzc3Nzc3"),
+    reward: () => {
+      coinBank += Math.pow(10, 4) * 2;
+    }
+  },
+  {
+    key: atob("NjY2NjY2"),
+    reward: () => {
+      coinBank = Math.sqrt(40000);
+    }
+  }
+];
+
+hiddenCodes.forEach(code => {
+
+  if(String(guess) === code.key){
+
+    code.reward();
+
+    localStorage.setItem(
+      "coin_bank",
+      coinBank
+    );
+
+    updateCoinBankDisplay();
+    updateStoreDisplay();
+    checkAchievements();
+  }
+});
+
+if(
+  !inputField.value ||
+  guess < currentMinBoundary ||
+  guess > currentMaxBoundary
+){
+
+      feedback.textContent =
+        `Please enter a number between ${currentMinBoundary} and ${currentMaxBoundary}.`;
+
+      return;
+    }
+
+    attemptsRemaining--;
+
+    attemptsLeftDisplay.textContent =
+      `Attempts Remaining: ${attemptsRemaining}`;
+
+    const guessesUsed =
+      totalAllowedAttempts -
+      attemptsRemaining;
+
+    if(guess === randomNumber){
+
+      addGuessToHistory(
+        guess,
+        "correct"
+      );
+
+      const reward =
+        calculateCoinReward(
+          guessesUsed,
+          totalAllowedAttempts
+        );
+
+      coinBank += reward;
+
+      localStorage.setItem(
+        "coin_bank",
+        coinBank
+      );
+
+      feedback.textContent =
+        `${activeIcon} Correct! You earned ${reward} coins!`;
+
+      confetti({
+        particleCount:140,
+        spread:90,
+        origin:{y:0.6}
+      });
+
+      const key =
+        `highscore_${currentDifficultyCategory}`;
+
+      const saved =
+        localStorage.getItem(key);
+
+      if(
+        !saved ||
+        guessesUsed < parseInt(saved)
+      ){
+
+        localStorage.setItem(
+          key,
+          guessesUsed
+        );
+
+        feedback.textContent +=
+          " ⭐ New High Score!";
+      }
+
+      updateCoinBankDisplay();
+      updateStoreDisplay();
+      checkAchievements();
+
+      recordGameEnd(true);
+
+      endGame();
+
+    }else if(attemptsRemaining <= 0){
+
+      addGuessToHistory(
+        guess,
+        guess > randomNumber
+          ? "high"
+          : "low"
+      );
+
+      feedback.textContent =
+        `💥 Game Over! The number was ${randomNumber}`;
+
+      recordGameEnd(false);
+
+      endGame();
+
+    }else if(guess > randomNumber){
+
+      addGuessToHistory(
+        guess,
+        "high"
+      );
+
+      feedback.textContent =
+        "Too high!";
+
+    }else{
+
+      addGuessToHistory(
+        guess,
+        "low"
+      );
+
+      feedback.textContent =
+        "Too low!";
+    }
+
+    inputField.value = "";
+
+    inputField.focus();
+  }
+);
+
+inputField.addEventListener(
+  "keypress",
+  function(event){
+
+    if(event.key === "Enter"){
+      submitBtn.click();
+    }
+  }
+);
+
+document
+  .querySelectorAll(".preset-btn")
+  .forEach(btn => {
+
+    btn.addEventListener(
+      "click",
+      function(){
+
+        minRangeInput.value =
+          this.dataset.min;
+
+        maxRangeInput.value =
+          this.dataset.max;
+
+        attemptsInput.value =
+          this.dataset.attempts;
+
+        initGame();
+      }
+    );
+  });
+
+document
+  .querySelectorAll(".store-item")
+  .forEach(item => {
+
+    item.addEventListener(
+      "click",
+      function(){
+
+        const icon =
+          this.dataset.icon;
+
+        const price =
+          Number(this.dataset.price);
+
+        const storeMessage =
+          document.querySelector(
+            "#storeMessage"
+          );
+
+        if(
+          ownedIcons.includes(icon)
+        ){
+
+          activeIcon = icon;
+
+          localStorage.setItem(
+            "active_icon",
+            activeIcon
+          );
+
+          updateStoreDisplay();
+
+          storeMessage.textContent =
+            `${icon} equipped!`;
+
+          return;
+        }
+
+        if(coinBank < price){
+
+          storeMessage.textContent =
+            `Need ${price} coins`;
+
+          return;
+        }
+
+        coinBank -= price;
+
+        ownedIcons.push(icon);
+
+        activeIcon = icon;
+
+        localStorage.setItem(
+          "owned_icons",
+          JSON.stringify(ownedIcons)
+        );
+
+        localStorage.setItem(
+          "active_icon",
+          activeIcon
+        );
+
+        localStorage.setItem(
+          "coin_bank",
+          coinBank
+        );
+
+        updateCoinBankDisplay();
+        updateStoreDisplay();
+
+        storeMessage.textContent =
+          `${icon} purchased!`;
+      }
+    );
+  });
+
+document
+  .querySelector("#openStatsBtn")
+  .addEventListener(
+    "click",
+    function(){
+
+      closeAllModals();
+
+      statsModal.classList.remove("hidden");
+    }
+  );
+
+document
+  .querySelector("#openStoreBtn")
+  .addEventListener(
+    "click",
+    function(){
+
+      closeAllModals();
+
+      storeModal.classList.remove("hidden");
+    }
+  );
+
+document
+  .querySelector("#openAchievementsBtn")
+  .addEventListener(
+    "click",
+    function(){
+
+      closeAllModals();
+
+      achievementsModal.classList.remove("hidden");
+    }
+  );
+
+document
+  .querySelector("#closeStatsBtn")
+  .addEventListener(
+    "click",
+    () =>
+      statsModal.classList.add("hidden")
+  );
+
+document
+  .querySelector("#closeStoreBtn")
+  .addEventListener(
+    "click",
+    () =>
+      storeModal.classList.add("hidden")
+  );
+
+document
+  .querySelector("#closeAchievementsBtn")
+  .addEventListener(
+    "click",
+    () =>
+      achievementsModal.classList.add("hidden")
+  );
+
+[
+  statsModal,
+  storeModal,
+  achievementsModal
+].forEach(modal => {
+
+  modal.addEventListener(
+    "click",
+    function(event){
+
+      if(event.target === modal){
+        modal.classList.add("hidden");
+      }
+    }
+  );
+});
+
+restartBtn.addEventListener(
+  "click",
+  initGame
+);
+
+document
+  .querySelector("#newGameBtn")
+  .addEventListener(
+    "click",
+    initGame
+  );
+  
+/* KEEP MINIMUM FIXED AT 1 */
+minRangeInput.addEventListener(
+  "input",
+  function(){
+
+    minRangeInput.value = 1;
+
+    updatePayoutTable();
+  }
+);
+
+/* ENFORCE MAX RANGE >= 50 */
+maxRangeInput.addEventListener(
+  "input",
+  function(){
+
+    if(Number(maxRangeInput.value) < 50){
+
+      maxRangeInput.value = 50;
+    }
+
+    updatePayoutTable();
+  }
+);
+
+/* CAP ATTEMPTS AT 15 */
+attemptsInput.addEventListener(
+  "input",
+  function(){
+
+    if(Number(attemptsInput.value) > 15){
+
+      attemptsInput.value = 15;
+    }
+
+    if(Number(attemptsInput.value) < 1){
+
+      attemptsInput.value = 1;
+    }
+
+    updatePayoutTable();
+  }
+);
+
+hintBtn.addEventListener(
+  "click",
+  function(){
+
+    if(attemptsRemaining <= 1){
+
+      feedback.textContent =
+        "Not enough attempts for a hint.";
+
+      return;
+    }
+
+    attemptsRemaining--;
+
+    attemptsLeftDisplay.textContent =
+      `Attempts Remaining: ${attemptsRemaining}`;
+
+    hintBox.classList.remove("hidden");
+
+    if(randomNumber % 2 === 0){
+
+      hintBox.textContent =
+        "💡 Hint: The number is EVEN";
+
+    }else{
+
+      hintBox.textContent =
+        "💡 Hint: The number is ODD";
+    }
+  }
+);
+
+openSetupBtn.addEventListener("click", function(){
+  closeAllModals();
+  setupModal.classList.remove("hidden");
+});
+
+closeSetupBtn.addEventListener("click", function(){
+  setupModal.classList.add("hidden");
+});
+
+setupModal.addEventListener("click", function(event){
+  if(event.target === setupModal){
+    setupModal.classList.add("hidden");
+  }
+});
+
+themeToggleBtn.addEventListener(
+  "click",
+  toggleTheme
+);
+
+document
+  .querySelector("#resetStatsBtn")
+  .addEventListener(
+    "click",
+    function(){
+
+      if(
+        confirm(
+          "Clear all stats, achievements, coins, and store items?"
+        )
+      ){
+
+        localStorage.clear();
+
+        coinBank = 0;
+
+        ownedIcons = ["🎯"];
+
+        activeIcon = "🎯";
+
+        initTheme();
+        initGame();
+      }
+    }
+  );
+
+initTheme();
+initGame();
+</script>
+
+</body>
+</html>
