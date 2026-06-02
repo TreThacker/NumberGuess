@@ -1,0 +1,45 @@
+{
+  "name": "Number Guessing Game",
+  "short_name": "Number Guess",
+  "description": "A feature-rich number guessing game with coins, achievements, collectables store, statistics, difficulty modes, and custom game setup.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+
+  "icons": [
+
+    {
+      "src": "image/icon-16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+
+    {
+      "src": "image/icon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+
+    {
+      "src": "image/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+
+    {
+      "src": "image/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+		
+		{
+			"src": "image/icon-apple.png",
+			"sizes": "180x180",
+			"type": "image/png"
+		}
+
+  ]
+}
