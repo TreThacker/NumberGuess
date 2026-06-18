@@ -1139,3 +1139,20 @@ finalResetSubmitBtn.addEventListener(
 initTheme();
 updatePlayerName();
 initGame();
+
+/* <------------------------------------------------
+      SERVICE WORKER REGISTRATION
+   -------------------------------------------------> */
+
+if("serviceWorker" in navigator){
+
+  window.addEventListener(
+    "load",
+    function(){
+
+      navigator.serviceWorker.register(
+        "service-worker.js"
+      );
+    }
+  );
+}
