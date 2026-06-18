@@ -278,4 +278,4 @@ Includes:
 
 # 📄 License
 
-License to be determined.
+Tre Thacker ~ 2026
